@@ -489,7 +489,7 @@
           const user = JSON.parse(localStorage.getItem('admin-token'));
           console.log(user);
           if (user && user.id) {
-              fetch(`/user/${user.id}`)
+              fetch(`/users/${user.id}`)
                   .then(response => response.json())
                   .then(data => {
                       profileImage.src = data.profile_image || defaultProfileImageUrl; 
