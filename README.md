@@ -37,7 +37,7 @@ The backend is structured into three main modular applications:
 
 - **Framework**: Django 4.2.13
 - **API**: Django REST Framework 3.14.0
-- **Database**: SQLite (development) / PostgreSQL (production)
+- **Database**: MySQL
 - **Authentication**: Token-based authentication + API keys
 - **PDF Processing**: PyPDF2, PyMuPDF, pdf2docx, reportlab
 - **Image Processing**: Pillow, OpenCV, img2pdf
@@ -50,6 +50,7 @@ The backend is structured into three main modular applications:
 - Python 3.9+
 - pip
 - Virtual environment (recommended)
+- MySQL Server 5.7+ or MariaDB 10.3+
 - Tesseract OCR (for OCR features)
   - **Windows**: Download from [GitHub](https://github.com/UB-Mannheim/tesseract/wiki)
   - **macOS**: `brew install tesseract`
@@ -82,25 +83,40 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 4. Environment Variables
+### 4. MySQL Database Setup
+
+1. Install MySQL Server:
+   - **Windows**: Download from [MySQL Downloads](https://dev.mysql.com/downloads/mysql/)
+   - **macOS**: `brew install mysql` or download installer
+   - **Linux**: `sudo apt-get install mysql-server` (Ubuntu/Debian) or `sudo yum install mysql-server` (CentOS/RHEL)
+
+2. Create MySQL database and user:
+```sql
+CREATE DATABASE doconva_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER 'doconva_user'@'localhost' IDENTIFIED BY 'your-password';
+GRANT ALL PRIVILEGES ON doconva_db.* TO 'doconva_user'@'localhost';
+FLUSH PRIVILEGES;
+```
+
+### 5. Environment Variables
 
 Create a `.env` file in the project root:
 
 ```env
 # Django Settings
 SECRET_KEY=your-secret-key-here
+DJANGO_ENVIRONMENT=development
 DEBUG=True
-ALLOWED_HOSTS=localhost,127.0.0.1
 
-# Database (for production, use PostgreSQL)
-DATABASE_URL=sqlite:///db.sqlite3
+# MySQL Database Configuration
+DB_NAME=doconva_db
+DB_USER=doconva_user
+DB_PASSWORD=your-password
+DB_HOST=localhost
+DB_PORT=3306
 
 # CORS Settings
 CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:3001
-
-# Media & Static Files
-MEDIA_ROOT=media
-STATIC_ROOT=staticfiles
 
 # Email Configuration (optional)
 EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend
@@ -110,12 +126,22 @@ EMAIL_USE_TLS=True
 EMAIL_HOST_USER=your-email@gmail.com
 EMAIL_HOST_PASSWORD=your-app-password
 
+# Frontend URLs
+BASE_HOST_URL=http://localhost:3000/
+FRONTEND_URL=http://localhost:3000
+
+# Payment Settings (optional)
+PAYSTACK_SECRET_KEY=your-paystack-secret-key
+PAYSTACK_PUBLIC_KEY=your-paystack-public-key
+PAYPAL_CLIENT_ID=your-paypal-client-id
+PAYPAL_SECRET_KEY=your-paypal-secret-key
+
 # Celery (optional, for background tasks)
 CELERY_BROKER_URL=redis://localhost:6379/0
 CELERY_RESULT_BACKEND=redis://localhost:6379/0
 ```
 
-### 5. Database Setup
+### 6. Database Setup
 
 ```bash
 # Run migrations
@@ -125,7 +151,7 @@ python manage.py migrate
 python manage.py createsuperuser
 ```
 
-### 6. Run Development Server
+### 7. Run Development Server
 
 ```bash
 python manage.py runserver
@@ -256,28 +282,52 @@ curl -X GET http://localhost:8000/api/users/me/ \
 
 ## 🗄️ Database
 
-### Development (SQLite)
-SQLite is used by default for development. No additional setup required.
+### MySQL Configuration
 
-### Production (PostgreSQL)
+The project uses MySQL as the database. Configuration is done via environment variables:
 
-1. Install PostgreSQL
-2. Create database:
-```sql
-CREATE DATABASE docconvertpro;
-CREATE USER docconvertpro_user WITH PASSWORD 'your-password';
-GRANT ALL PRIVILEGES ON DATABASE docconvertpro TO docconvertpro_user;
-```
-
-3. Update `.env`:
 ```env
-DATABASE_URL=postgresql://docconvertpro_user:your-password@localhost:5432/docconvertpro
+DB_NAME=doconva_db
+DB_USER=doconva_user
+DB_PASSWORD=your-password
+DB_HOST=localhost
+DB_PORT=3306
 ```
 
-4. Run migrations:
+### Database Setup Steps
+
+1. **Install MySQL Server** (if not already installed)
+   - Windows: Download from [MySQL Downloads](https://dev.mysql.com/downloads/mysql/)
+   - macOS: `brew install mysql`
+   - Linux: `sudo apt-get install mysql-server`
+
+2. **Create Database and User**:
+```sql
+CREATE DATABASE doconva_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER 'doconva_user'@'localhost' IDENTIFIED BY 'your-password';
+GRANT ALL PRIVILEGES ON doconva_db.* TO 'doconva_user'@'localhost';
+FLUSH PRIVILEGES;
+```
+
+3. **Configure Environment Variables** (in `.env` file):
+```env
+DB_NAME=doconva_db
+DB_USER=doconva_user
+DB_PASSWORD=your-password
+DB_HOST=localhost
+DB_PORT=3306
+```
+
+4. **Run Migrations**:
 ```bash
 python manage.py migrate
 ```
+
+### Notes
+
+- The database uses `utf8mb4` character set to support full Unicode including emojis
+- PyMySQL is used as the MySQL client library (works on all platforms including Windows)
+- For production, ensure MySQL is properly secured and use strong passwords
 
 ## 🧪 Testing
 
@@ -351,9 +401,17 @@ celery -A config beat -l info
 
 ```env
 SECRET_KEY=your-production-secret-key
+DJANGO_ENVIRONMENT=production
 DEBUG=False
 ALLOWED_HOSTS=yourdomain.com,www.yourdomain.com
-DATABASE_URL=postgresql://user:password@host:5432/dbname
+
+# MySQL Database
+DB_NAME=doconva_db
+DB_USER=doconva_user
+DB_PASSWORD=your-secure-password
+DB_HOST=localhost
+DB_PORT=3306
+
 CORS_ALLOWED_ORIGINS=https://yourdomain.com
 ```
 

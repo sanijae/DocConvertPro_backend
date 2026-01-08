@@ -9,6 +9,10 @@ sqlparse==0.5.0
 pytz>=2024.1
 # backports.zoneinfo not needed for Python 3.9+ (zoneinfo is built-in)
 
+# MySQL Database
+PyMySQL>=1.1.0
+mysqlclient>=2.2.0; platform_system != "Windows"
+
 # PDF Processing
 PyPDF2==3.0.1
 PyPDF4==1.27.0
@@ -46,6 +50,7 @@ python-dateutil==2.9.0
 six==1.16.0
 click==8.1.7
 colorama==0.4.6
+python-dotenv>=1.0.0
 
 # Celery (for async tasks)
 celery==5.3.4
