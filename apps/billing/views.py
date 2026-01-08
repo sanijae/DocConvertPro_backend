@@ -4,7 +4,7 @@ Views for Billing app.
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from .models import SubscriptionPlan, Subscription, Payment
 from .serializers import SubscriptionPlanSerializer, SubscriptionSerializer, PaymentSerializer
 from .services import BillingService
@@ -15,7 +15,7 @@ class SubscriptionPlanViewSet(viewsets.ReadOnlyModelViewSet):
     """ViewSet for SubscriptionPlan."""
     queryset = SubscriptionPlan.objects.filter(is_active=True)
     serializer_class = SubscriptionPlanSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]  # Allow public access to view plans
     
     def get_queryset(self):
         """Filter plans by type if specified."""

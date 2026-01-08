@@ -22,26 +22,55 @@ class UserSerializer(serializers.ModelSerializer):
 
 class UserCreateSerializer(serializers.ModelSerializer):
     """Serializer for creating a new user."""
+    username = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     password = serializers.CharField(write_only=True, validators=[validate_password])
     password_confirm = serializers.CharField(write_only=True)
+    name = serializers.CharField(required=False, allow_blank=True, write_only=True)
     
     class Meta:
         model = User
-        fields = ['username', 'email', 'password', 'password_confirm', 'first_name', 'last_name']
+        fields = ['username', 'email', 'password', 'password_confirm', 'first_name', 'last_name', 'name']
+        extra_kwargs = {
+            'username': {'required': False, 'allow_blank': True, 'allow_null': True},
+            'first_name': {'required': False, 'allow_blank': True},
+            'last_name': {'required': False, 'allow_blank': True}
+        }
     
     def validate(self, attrs):
-        """Validate that passwords match."""
+        """Validate that passwords match and map name to first_name if provided."""
         if attrs['password'] != attrs['password_confirm']:
             raise serializers.ValidationError({"password": "Password fields didn't match."})
+        
+        # Map 'name' field to 'first_name' if 'name' is provided and 'first_name' is not
+        if 'name' in attrs and attrs['name']:
+            if 'first_name' not in attrs or not attrs.get('first_name'):
+                attrs['first_name'] = attrs['name']
+        
         return attrs
     
     def create(self, validated_data):
         """Create a new user."""
         from .services import UserService
         
-        validated_data.pop('password_confirm')
+        validated_data.pop('password_confirm', None)
         password = validated_data.pop('password')
+        
+        # Remove 'name' field if it exists (already mapped to first_name in validate)
+        validated_data.pop('name', None)
+        
+        # Get username or None
+        username = validated_data.pop('username', None)
+        if username:
+            username = username.strip()
+        if not username:
+            username = None
+        
+        # Get email
+        email = validated_data.pop('email')
+            
         user = UserService.create_user(
+            email=email,
+            username=username,
             password=password,
             **validated_data
         )

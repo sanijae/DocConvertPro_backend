@@ -14,18 +14,30 @@ class SubscriptionPlan(models.Model):
     """Subscription plan model."""
     PLAN_TYPES = [
         ('free', 'Free'),
-        ('basic', 'Basic'),
-        ('premium', 'Premium'),
-        ('enterprise', 'Enterprise'),
+        ('starter', 'Starter'),
+        ('pro', 'Pro'),
     ]
     
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=50)
     plan_type = models.CharField(max_length=20, choices=PLAN_TYPES, default='free')
-    conversion_limit = models.IntegerField(default=10, null=True, blank=True)  # null = unlimited
+    # Conversion limits
+    daily_conversion_limit = models.IntegerField(default=3, null=True, blank=True)  # null = unlimited
+    # File limits
+    file_size_limit_mb = models.IntegerField(default=5, null=True, blank=True)  # null = unlimited
+    # Pricing
     price_monthly = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     price_yearly = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
-    features = models.JSONField(default=list, blank=True)
+    currency = models.CharField(max_length=3, default='NGN')  # NGN, USD, etc.
+    # Features
+    watermark = models.BooleanField(default=True)  # True = watermark on output
+    batch_conversions = models.BooleanField(default=False)  # Support for batch processing
+    ocr_support = models.BooleanField(default=False)  # OCR support for advanced formats
+    priority_processing = models.BooleanField(default=False)  # Priority processing
+    cloud_storage = models.BooleanField(default=False)  # Cloud storage integration
+    supported_formats = models.JSONField(default=list, blank=True)  # List of supported formats
+    features = models.JSONField(default=list, blank=True)  # Human-readable feature descriptions
+    # Status
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -34,6 +46,7 @@ class SubscriptionPlan(models.Model):
         db_table = 'subscription_plans'
         verbose_name = 'Subscription Plan'
         verbose_name_plural = 'Subscription Plans'
+        ordering = ['price_monthly']
     
     def __str__(self):
         return self.name
@@ -95,7 +108,7 @@ class Payment(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='payments')
     subscription = models.ForeignKey(Subscription, on_delete=models.CASCADE, related_name='payments', null=True, blank=True)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
-    currency = models.CharField(max_length=3, default='USD')
+    currency = models.CharField(max_length=3, default='NGN')
     payment_method = models.CharField(max_length=20, choices=PAYMENT_METHODS)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     transaction_id = models.CharField(max_length=255, unique=True, null=True, blank=True)

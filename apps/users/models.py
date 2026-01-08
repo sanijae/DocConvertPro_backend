@@ -11,6 +11,14 @@ from datetime import timedelta
 class User(AbstractUser):
     """Custom User model."""
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    username = models.CharField(
+        max_length=150,
+        unique=True,
+        null=True,
+        blank=True,
+        validators=[AbstractUser.username_validator],
+        help_text='Optional. 150 characters or fewer. Letters, digits and @/./+/-/_ only.'
+    )
     email = models.EmailField(unique=True)
     email_verified = models.BooleanField(default=False)
     conversion_count = models.IntegerField(default=0)
@@ -21,7 +29,7 @@ class User(AbstractUser):
     updated_at = models.DateTimeField(auto_now=True)
     
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username']
+    REQUIRED_FIELDS = []
     
     class Meta:
         app_label = 'users'

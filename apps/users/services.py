@@ -14,8 +14,18 @@ class UserService:
     
     @staticmethod
     @transaction.atomic
-    def create_user(email, username, password, **extra_fields):
+    def create_user(email, username=None, password=None, **extra_fields):
         """Create a new user."""
+        # Generate username from email if not provided
+        if not username:
+            # Use email prefix as username, append numbers if needed for uniqueness
+            base_username = email.split('@')[0].replace('.', '_').replace('+', '_')[:140]
+            username = base_username
+            counter = 1
+            while User.objects.filter(username=username).exists():
+                username = f"{base_username}_{counter}"[:140]
+                counter += 1
+        
         user = User.objects.create_user(
             email=email,
             username=username,

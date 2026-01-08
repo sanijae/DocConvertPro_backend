@@ -18,7 +18,14 @@ class SubscriptionSerializer(serializers.ModelSerializer):
     """Serializer for Subscription."""
     plan_name = serializers.CharField(source='plan.name', read_only=True)
     plan_type = serializers.CharField(source='plan.plan_type', read_only=True)
-    conversion_limit = serializers.IntegerField(source='plan.conversion_limit', read_only=True)
+    daily_conversion_limit = serializers.IntegerField(source='plan.daily_conversion_limit', read_only=True, allow_null=True)
+    file_size_limit_mb = serializers.IntegerField(source='plan.file_size_limit_mb', read_only=True, allow_null=True)
+    watermark = serializers.BooleanField(source='plan.watermark', read_only=True)
+    batch_conversions = serializers.BooleanField(source='plan.batch_conversions', read_only=True)
+    ocr_support = serializers.BooleanField(source='plan.ocr_support', read_only=True)
+    priority_processing = serializers.BooleanField(source='plan.priority_processing', read_only=True)
+    cloud_storage = serializers.BooleanField(source='plan.cloud_storage', read_only=True)
+    supported_formats = serializers.ListField(source='plan.supported_formats', read_only=True)
     
     class Meta:
         model = Subscription
