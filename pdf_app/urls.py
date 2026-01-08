@@ -108,9 +108,12 @@ urlpatterns = [
 
 
 if settings.DEBUG:
-    import debug_toolbar
-
-    urlpatterns = [
-        path('__debug__/', include(debug_toolbar.urls)),
-        # Add other URL patterns here
-    ] + urlpatterns
+    try:
+        import debug_toolbar
+        urlpatterns = [
+            path('__debug__/', include(debug_toolbar.urls)),
+            # Add other URL patterns here
+        ] + urlpatterns
+    except ImportError:
+        # debug_toolbar not installed, skip it
+        pass
